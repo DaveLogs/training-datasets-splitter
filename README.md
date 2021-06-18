@@ -2,6 +2,15 @@
 
 Split the training datasets into 'training'/'validation'/'test' data.
 
+
+## Installation system requirements
+Install the python packages.
+
+```bash
+(venv) $ pip install -r requirements.txt
+```
+
+
 ## Usage example
 
 ```bash
@@ -11,6 +20,7 @@ Split the training datasets into 'training'/'validation'/'test' data.
     --split_name training-validation-test \
     --split_ratio 0.8-0.1-0.1
 ```
+
 
 ## Data Structures
 
@@ -35,6 +45,7 @@ The structure of data folder as below.
     image_00002.jpg    efgh
     ...
 ```
+
 
 ### Output data
 
