@@ -6,6 +6,7 @@ Split the training datasets into 'training'/'validation'/'test' data.
     python split.py \
         --input_path ./input \
         --output_path ./output \
+        --group_name group1 \
         --split_name training-validation-test \
         --split_ratio 0.8-0.1-0.1
 
@@ -13,11 +14,15 @@ Split the training datasets into 'training'/'validation'/'test' data.
 
 ### Input data
 /input
-#   [filename].[ext]
-├── image_00001.jpg
-├── image_00002.jpg
-├── ...
-└── labels.txt
+├── /group1
+│   #   [filename].[ext]
+│   ├── image_00001.jpg
+│   ├── image_00002.jpg
+│   ├── ...
+│   └── labels.txt
+│   
+├── /group2
+└── ...
 
 * Label 'labels.txt' file structure:
 #   {filename}\t{label}\n
@@ -55,25 +60,25 @@ import shutil
 from sklearn.model_selection import train_test_split
 
 
-def run(args):
+def run(input_path, output_path, split_name, split_ratio):
     """ Split the training datasets """
 
     # split info configuration
-    args.split_name = args.split_name.split('-')
-    args.split_ratio = [float(ratio) for ratio in args.split_ratio.split('-')]
-    validation_of_split_group_info(args.split_name, args.split_ratio)
+    split_name = split_name.split('-')
+    split_ratio = [float(ratio) for ratio in split_ratio.split('-')]
+    validation_of_split_group_info(split_name, split_ratio)
 
     # validation of raw datasets
-    files, labels, count = validation_of_raw_datasets(args.input_path)
+    files, labels, count = validation_of_raw_datasets(input_path)
 
     # create output directory
-    if os.path.isdir(args.output_path):
-        sys.exit(f"'{args.output_path}' directory is already exists.")
+    if os.path.isdir(output_path):
+        sys.exit(f"'{output_path}' directory is already exists.")
     else:
-        split_group_path = create_working_directory(args.output_path, args.split_name)
+        split_group_path = create_working_directory(output_path, split_name)
 
     # split the training datasets
-    split_group = split_training_datasets(files, args.split_name, args.split_ratio)
+    split_group = split_training_datasets(files, split_name, split_ratio)
 
     # move data and create 'gt.txt'
     for _, key in enumerate(split_group):
@@ -82,7 +87,7 @@ def run(args):
         images_path = os.path.join(split_group_path[key], "images")
         os.makedirs(images_path)
 
-        print("split group: ", key)
+        print("split name: ", key)
         for idx, item in enumerate(split_group[key]):
             if (idx + 1) % 100 == 0:
                 print(("\r%{}d / %{}d Processing !!".format(digits, digits)) % (idx + 1, len(split_group[key])), end="")
@@ -97,10 +102,10 @@ def run(args):
         print("\n")
 
     # summary of splitted datasets
-    print("-" * 50)
     print("Total datasets count: ", count)
     for _, key in enumerate(split_group):
-        print("'%s' group's data count: %d" % (key, len(split_group[key])))
+        print("'%s' split data count: %d" % (key, len(split_group[key])))
+    print("-" * 40)
 
     return
 
@@ -178,7 +183,7 @@ def split_training_datasets(files, name_list, ratio_list):
             train_test_split(group_data[name_list[1]], train_size=ratio_list[1]/(ratio_list[1]+ratio_list[2]))
 
     # for idx in range(0, len(name_list)):
-    #     print(f"args.split_name[{idx}]: ", len(group_data[name_list[idx]]))
+    #     print(f"split_name[{idx}]: ", len(group_data[name_list[idx]]))
 
     return group_data
 
@@ -188,6 +193,7 @@ def parse_arguments():
 
     parser.add_argument("--input_path", type=str, required=True, help="Path of the raw datasets")
     parser.add_argument("--output_path", type=str, required=True, help="Path of the splitted datasets")
+    parser.add_argument("--group_name", type=str, help="Define the name of the group to be split")
     parser.add_argument("--split_name", type=str, default="training-test", help="Name of each group to be split")
     parser.add_argument("--split_ratio", type=str, default="0.9-0.1", help="Assign ratio for each group to be split")
 
@@ -196,5 +202,18 @@ def parse_arguments():
 
 
 if __name__ == '__main__':
-    arguments = parse_arguments()
-    run(arguments)
+    args = parse_arguments()
+
+    if args.group_name:
+        groups = [args.group_name]
+    else:
+        groups = [g for g in os.listdir(args.input_path)]
+
+    for ii, group in enumerate(groups):
+        print("\n[%d/%d] group: '%s'" % (ii+1, len(groups), group))
+        print("-" * 40)
+
+        input_path = os.path.join(args.input_path, group)
+        output_path = os.path.join(args.output_path, group)
+
+        run(input_path, output_path, args.split_name, args.split_ratio)
