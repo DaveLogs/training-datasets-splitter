@@ -17,6 +17,7 @@ Install the python packages.
 (venv) $ python split.py \
     --input_path ./input \
     --output_path ./output \
+    --group_name group1 \
     --split_name training-validation-test \
     --split_ratio 0.8-0.1-0.1
 ```
@@ -30,11 +31,15 @@ The structure of data folder as below.
 
 ```
 /input
-#   [filename].[ext]
-├── image_00001.jpg
-├── image_00002.jpg
-├── ...
-└── labels.txt
+├── /group1
+│   #   [filename].[ext]
+│   ├── image_00001.jpg
+│   ├── image_00002.jpg
+│   ├── ...
+│   └── labels.txt
+│   
+├── /group2
+└── ...
 ```
 
 * Label 'labels.txt' file structure:
